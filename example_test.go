@@ -2,8 +2,8 @@ package dht_test
 
 import (
 	"fmt"
+	"github.com/jbitor/bittorrent"
 	"github.com/jbitor/dht"
-	"github.com/jbitor/torrent"
 	"testing"
 )
 

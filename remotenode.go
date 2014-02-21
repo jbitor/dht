@@ -3,7 +3,7 @@ package dht
 import (
 	"fmt"
 	"github.com/jbitor/bencoding"
-	"github.com/jbitor/torrent"
+	"github.com/jbitor/bittorrent"
 	"net"
 	"time"
 )
