@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/jbitor/bencoding"
-	"github.com/jbitor/jbitor/torrent"
+	"github.com/jbitor/torrent"
 	"net"
 	"time"
 )

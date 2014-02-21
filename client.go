@@ -3,7 +3,7 @@ package dht
 import (
 	"errors"
 	"github.com/jbitor/bencoding"
-	"github.com/jbitor/jbitor/torrent"
+	"github.com/jbitor/torrent"
 	"io/ioutil"
 	weakrand "math/rand"
 	"os"
