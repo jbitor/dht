@@ -9,7 +9,7 @@ import (
 )
 
 type RemoteNode struct {
-	Id      torrent.BTID // may be unknown
+	Id      bittorrent.BTID // may be unknown
 	Address net.UDPAddr
 
 	LastRequestTo    time.Time
@@ -45,7 +45,7 @@ func RemoteNodeFromAddress(address net.UDPAddr) (remote *RemoteNode) {
 func RemoteNodeFromBencodingDict(dict bencoding.Dict) (remote *RemoteNode) {
 	remote = new(RemoteNode)
 
-	remote.Id = torrent.BTID(dict["Id"].(bencoding.String))
+	remote.Id = bittorrent.BTID(dict["Id"].(bencoding.String))
 	remote.Address = decodeNodeAddress(dict["Address"].(bencoding.String))
 	remote.LastRequestTo = time.Unix(int64(dict["LastRequestToSec"].(bencoding.Int)), 0)
 	remote.LastResponseTo = time.Unix(int64(dict["LastResponseToSec"].(bencoding.Int)), 0)

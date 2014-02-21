@@ -7,9 +7,9 @@ import (
 	"testing"
 )
 
-// Attempts to find peers for an Ubuntu Torrent.
+// Attempts to find peers for an Ubuntu bittorrent.
 func ExampleClient() {
-	infoHash, _ := torrent.BTIDFromHex("5497a53543938b77ef660939d3b32e02be7bc213")
+	infoHash, _ := bittorrent.BTIDFromHex("5497a53543938b77ef660939d3b32e02be7bc213")
 
 	c, err := dht.OpenClient(".dht", true)
 	if err != nil {

@@ -32,11 +32,11 @@ type Client interface {
 	// Save saves the current state of the DHT to its data file.
 	Save() (err error)
 
-	// GetPeers attempts to find remote torrent peers downloading a given torrent.
-	GetPeers(infoHash torrent.BTID) (peers []*torrent.RemotePeer, err error)
+	// GetPeers attempts to find remote torrent peers downloading a given bittorrent.
+	GetPeers(infoHash bittorrent.BTID) (peers []*bittorrent.RemotePeer, err error)
 
-	// AnnouncePeer announces to the DHT that a local torrent peer is downloading a given torrent.
-	AnnouncePeer(local *torrent.LocalPeer, infoHash torrent.BTID) (err error)
+	// AnnouncePeer announces to the DHT that a local torrent peer is downloading a given bittorrent.
+	AnnouncePeer(local *bittorrent.LocalPeer, infoHash bittorrent.BTID) (err error)
 
 	ConnectionInfo() ConnectionInfo
 }
@@ -197,7 +197,7 @@ func (c *localNodeClient) Save() (err error) {
 	return
 }
 
-func (c *localNodeClient) GetPeers(target torrent.BTID) (peers []*torrent.RemotePeer, err error) {
+func (c *localNodeClient) GetPeers(target bittorrent.BTID) (peers []*bittorrent.RemotePeer, err error) {
 	// XXX: should retain a list of all nodes already queried in this request
 
 	for {
@@ -225,7 +225,7 @@ func (c *localNodeClient) GetPeers(target torrent.BTID) (peers []*torrent.Remote
 	}
 }
 
-func (c *localNodeClient) AnnouncePeer(local *torrent.LocalPeer, infoHash torrent.BTID) (err error) {
+func (c *localNodeClient) AnnouncePeer(local *bittorrent.LocalPeer, infoHash bittorrent.BTID) (err error) {
 	panic("AnnouncePeer not implemented")
 }
 
@@ -339,7 +339,7 @@ func (local *localNode) requestMoreNodes() {
 		i++
 	}
 
-	target := torrent.WeakRandomBTID()
+	target := bittorrent.WeakRandomBTID()
 
 	logger.Printf("Requesting new nodes around %v from %v.\n", target, randNode)
 

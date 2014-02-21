@@ -105,7 +105,7 @@ func (local *localNode) Ping(remote *RemoteNode) (<-chan *bencoding.Dict, <-chan
 
 		select {
 		case value := <-query.Result:
-			remote.Id = torrent.BTID((*value)["id"].(bencoding.String))
+			remote.Id = bittorrent.BTID((*value)["id"].(bencoding.String))
 
 			remote.ConsecutiveFailedQueries = 0
 
@@ -133,7 +133,7 @@ func (local *localNode) decodeNodesString(nodesData bencoding.String, source *Re
 
 		resultRemote := RemoteNodeFromAddress(nodeAddress)
 		resultRemote.Source = source
-		resultRemote.Id = torrent.BTID(nodeId)
+		resultRemote.Id = bittorrent.BTID(nodeId)
 
 		resultRemote = local.AddOrGetRemoteNode(resultRemote)
 
@@ -143,7 +143,7 @@ func (local *localNode) decodeNodesString(nodesData bencoding.String, source *Re
 	return result, nil
 }
 
-func (local *localNode) FindNode(remote *RemoteNode, id torrent.BTID) (<-chan []*RemoteNode, <-chan error) {
+func (local *localNode) FindNode(remote *RemoteNode, id bittorrent.BTID) (<-chan []*RemoteNode, <-chan error) {
 	findResult := make(chan []*RemoteNode)
 	findErr := make(chan error)
 
@@ -182,8 +182,8 @@ func (local *localNode) FindNode(remote *RemoteNode, id torrent.BTID) (<-chan []
 	return findResult, findErr
 }
 
-func (local *localNode) GetPeers(remote *RemoteNode, infoHash torrent.BTID) (<-chan []*torrent.RemotePeer, <-chan []*RemoteNode, <-chan error) {
-	peersResult := make(chan []*torrent.RemotePeer)
+func (local *localNode) GetPeers(remote *RemoteNode, infoHash bittorrent.BTID) (<-chan []*bittorrent.RemotePeer, <-chan []*RemoteNode, <-chan error) {
+	peersResult := make(chan []*bittorrent.RemotePeer)
 	nodesResult := make(chan []*RemoteNode)
 	getPeersErr := make(chan error)
 
@@ -202,7 +202,7 @@ func (local *localNode) GetPeers(remote *RemoteNode, infoHash torrent.BTID) (<-c
 			nodesData, nodesOk := (*value)["nodes"].(bencoding.String)
 
 			if peersOk {
-				result := make([]*torrent.RemotePeer, len(peerData))
+				result := make([]*bittorrent.RemotePeer, len(peerData))
 
 				for i, data := range peerData {
 					dataStr, ok := data.(bencoding.String)
@@ -212,14 +212,14 @@ func (local *localNode) GetPeers(remote *RemoteNode, infoHash torrent.BTID) (<-c
 						return
 					}
 
-					addr, err := torrent.DecodePeerAddress(dataStr)
+					addr, err := bittorrent.DecodePeerAddress(dataStr)
 					if err != nil {
 						remote.ConsecutiveFailedQueries++
 						getPeersErr <- err
 						return
 					}
 
-					result[i] = &torrent.RemotePeer{Address: addr}
+					result[i] = &bittorrent.RemotePeer{Address: addr}
 				}
 
 				remote.ConsecutiveFailedQueries = 0
@@ -249,7 +249,7 @@ func (local *localNode) GetPeers(remote *RemoteNode, infoHash torrent.BTID) (<-c
 	return peersResult, nodesResult, getPeersErr
 }
 
-func (local *localNode) AnnouncePeer(remote *RemoteNode, id torrent.BTID) (result <-chan *bencoding.Dict, err <-chan error) {
+func (local *localNode) AnnouncePeer(remote *RemoteNode, id bittorrent.BTID) (result <-chan *bencoding.Dict, err <-chan error) {
 	logger.Fatalf("AnnouncePeer() not implemented\n")
 	return
 }

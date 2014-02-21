@@ -16,7 +16,7 @@ client components of a node -- it does not maintain a proper routing table
 and cannot respond to queries.
 */
 type localNode struct {
-	Id                 torrent.BTID
+	Id                 bittorrent.BTID
 	Port               int
 	Connection         *net.UDPConn
 	Nodes              map[string]*RemoteNode
@@ -26,7 +26,7 @@ type localNode struct {
 type RemoteList []*RemoteNode
 
 func newLocalNode() (local *localNode) {
-	id, err := torrent.SecureRandomBTID()
+	id, err := bittorrent.SecureRandomBTID()
 	if err != nil {
 		// You used up all the entropy!
 		panic(err)
@@ -62,12 +62,12 @@ func (local *localNode) AddOrGetRemoteNode(remote *RemoteNode) *RemoteNode {
 }
 
 type nodeOrderingByCloseness struct {
-	target    torrent.BTID
+	target    bittorrent.BTID
 	nodes     []*RemoteNode
 	distances [][5]uint32
 }
 
-func (local *localNode) nodeOrderingByClosenessFromTarget(target torrent.BTID) (ordering nodeOrderingByCloseness) {
+func (local *localNode) nodeOrderingByClosenessFromTarget(target bittorrent.BTID) (ordering nodeOrderingByCloseness) {
 	ordering.target = target
 	ordering.nodes = make([]*RemoteNode, len(local.Nodes))
 	ordering.distances = make([][5]uint32, len(local.Nodes))
@@ -111,7 +111,7 @@ func (ordering nodeOrderingByCloseness) Less(i, j int) bool {
 
 // Returns a slice of known queryable *RemoteNodes.
 // If bootstrap nodes are included, they will sort after *all* non-bootstrap nodes.
-func (local *localNode) NodesByCloseness(target torrent.BTID, includeBootstrap bool) (nodes []*RemoteNode) {
+func (local *localNode) NodesByCloseness(target bittorrent.BTID, includeBootstrap bool) (nodes []*RemoteNode) {
 	ordering := local.nodeOrderingByClosenessFromTarget(target)
 	sort.Sort(ordering)
 
@@ -143,7 +143,7 @@ func RemoteNodeKey(addr net.UDPAddr) string {
 func localNodeFromBencodingDict(dict bencoding.Dict) (local *localNode) {
 	local = new(localNode)
 
-	local.Id = torrent.BTID(dict["Id"].(bencoding.String))
+	local.Id = bittorrent.BTID(dict["Id"].(bencoding.String))
 	local.Port = int(dict["Port"].(bencoding.Int))
 	local.OutstandingQueries = make(map[string]*outstandingQuery)
 	local.Nodes = map[string]*RemoteNode{}
