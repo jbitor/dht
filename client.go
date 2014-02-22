@@ -197,20 +197,8 @@ func (c *localNodeClient) Save() (err error) {
 	return
 }
 
-func (c *localNodeClient) GetPeers(target bittorrent.BTID) (search *GetPeersSearch) {
-	search = &GetPeersSearch{
-		Infohash:           target,
-		Options:            GetPeersDefaultOptions,
-		StartTime:          time.Now(),
-		localNode:          c.localNode,
-		QueriedNodes:       make(map[string]*RemoteNode),
-		PeersFound:         make(map[string]*bittorrent.RemotePeer),
-		OutstandingQueries: make(map[string]*RpcQuery),
-	}
-
-	go search.run()
-
-	return search
+func (c *localNodeClient) GetPeers(target bittorrent.BTID) (s *GetPeersSearch) {
+	return newGetPeersSearch(target, c.localNode)
 }
 
 func (c *localNodeClient) AnnouncePeer(local *bittorrent.LocalPeer, infoHash bittorrent.BTID) (err error) {
