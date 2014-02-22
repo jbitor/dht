@@ -12,7 +12,7 @@ import (
 )
 
 // Any DHT queries sent to another node will time out after this long.
-const QUERY_TIMEOUT = 10 * time.Second
+const QUERY_TIMEOUT = 16 * time.Second
 
 // Information about how a client/node is connected to the DHT network.
 type ConnectionInfo struct {
@@ -33,7 +33,7 @@ type Client interface {
 	Save() (err error)
 
 	// GetPeers attempts to find remote torrent peers downloading a given bittorrent.
-	GetPeers(infoHash bittorrent.BTID) (peers []*bittorrent.RemotePeer, err error)
+	GetPeers(infoHash bittorrent.BTID) (search *GetPeersSearch)
 
 	// AnnouncePeer announces to the DHT that a local torrent peer is downloading a given bittorrent.
 	AnnouncePeer(local *bittorrent.LocalPeer, infoHash bittorrent.BTID) (err error)
@@ -197,32 +197,20 @@ func (c *localNodeClient) Save() (err error) {
 	return
 }
 
-func (c *localNodeClient) GetPeers(target bittorrent.BTID) (peers []*bittorrent.RemotePeer, err error) {
-	// XXX: should retain a list of all nodes already queried in this request
-
-	for {
-		time.Sleep(5 * time.Second)
-
-		nodes := c.localNode.NodesByCloseness(target, false)
-		logger.Printf("Request peers from %v nodes closest to %v.\n", len(nodes), target)
-
-		// request
-		for _, remote := range nodes[:5] {
-			// todo: concurrent requests?
-			peersResult, nodesResult, errorResult := c.localNode.GetPeers(remote, target)
-
-			select {
-			case peers := <-peersResult:
-				return peers, nil
-			case _ = <-nodesResult:
-				// nothing to do -- nodes will already have been recorded
-			case err := <-errorResult:
-				logger.Printf("Error response to GetPeers: %v\n", err)
-			}
-		}
-
-		time.Sleep(5 * time.Second)
+func (c *localNodeClient) GetPeers(target bittorrent.BTID) (search *GetPeersSearch) {
+	search = &GetPeersSearch{
+		Infohash:           target,
+		Options:            GetPeersDefaultOptions,
+		StartTime:          time.Now(),
+		localNode:          c.localNode,
+		QueriedNodes:       make(map[string]*RemoteNode),
+		PeersFound:         make(map[string]*bittorrent.RemotePeer),
+		OutstandingQueries: make(map[string]*RpcQuery),
 	}
+
+	go search.run()
+
+	return search
 }
 
 func (c *localNodeClient) AnnouncePeer(local *bittorrent.LocalPeer, infoHash bittorrent.BTID) (err error) {

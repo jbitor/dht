@@ -26,23 +26,56 @@ var GetPeersDefaultOptions = GetPeersOptions{
 type GetPeersSearch struct {
 	Infohash           bittorrent.BTID
 	Options            GetPeersOptions
-	QueriedNodes       map[bittorrent.BTID]*RemoteNode
-	PeersFound         map[bittorrent.BTID]*bittorrent.RemotePeer
+	QueriedNodes       map[string]*RemoteNode
+	PeersFound         map[string]*bittorrent.RemotePeer
 	OutstandingQueries map[string]*RpcQuery
 	StartTime          time.Time
 	finished           bool
+	localNode          *localNode
 }
 
-// XXX(JB): We probably won't actually use this anywhere, instances
-// XXX(JB): will just be created in the one location that they're
-// XXX(JB): actually needed.
-func newGetPeersSearch(infohash bittorrent.BTID) (s *GetPeersSearch) {
-	s = &GetPeersSearch{
-		Infohash:  infohash,
-		Options:   GetPeersDefaultOptions,
-		StartTime: time.Now(),
+// The main loop of a GetPeers search.
+func (s *GetPeersSearch) run() {
+	for !s.Finished() {
+		nodes := s.localNode.NodesByCloseness(s.Infohash, false)
+
+		if s.AdditionalQueriesDue() {
+			var remote *RemoteNode = nil
+			for _, candidate := range nodes {
+				// XXX(JB): .String() is not a clean way to do this
+				if _, ok := s.QueriedNodes[candidate.Address.String()]; ok {
+					continue // already queried this node
+				}
+
+				remote = candidate
+				s.QueriedNodes[remote.Address.String()] = remote
+				break
+			}
+
+			if remote != nil {
+				logger.Printf("Request peers for %v from %v.\n", s.Infohash, remote)
+
+				go func() {
+					peersResult, nodesResult, errorResult := s.localNode.GetPeers(remote, s.Infohash)
+
+					select {
+					case peers := <-peersResult:
+						logger.Printf("Got peers from %v")
+						for _, peer := range peers {
+							// XXX(JB): .String() is not a clean way to do this
+							s.PeersFound[peer.Address.String()] = peer
+						}
+					case _ = <-nodesResult:
+						// nothing to do -- nodes will already have been recorded
+					case err := <-errorResult:
+						logger.Printf("Error response to GetPeers: %v\n", err)
+					}
+				}()
+			}
+		}
+
+		time.Sleep(5 * time.Second)
 	}
-	return
 }
 
 // Immediately causes the search to be finished.
