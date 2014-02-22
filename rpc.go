@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-type outstandingQuery struct {
+type RpcQuery struct {
 	TransactionId string
 	Remote        *RemoteNode
 	Result        chan *bencoding.Dict
@@ -41,8 +41,8 @@ func encodeNodeAddress(addr net.UDPAddr) (encoded bencoding.String) {
 	})
 }
 
-func (local *localNode) sendoutstandingQuery(remote *RemoteNode, queryType string, arguments bencoding.Dict) (query *outstandingQuery) {
-	query = new(outstandingQuery)
+func (local *localNode) sendQuery(remote *RemoteNode, queryType string, arguments bencoding.Dict) (query *RpcQuery) {
+	query = new(RpcQuery)
 	query.Result = make(chan *bencoding.Dict)
 	query.Err = make(chan error)
 	query.Remote = remote
@@ -97,7 +97,7 @@ func (local *localNode) Ping(remote *RemoteNode) (<-chan *bencoding.Dict, <-chan
 	pingResult := make(chan *bencoding.Dict)
 	pingErr := make(chan error)
 
-	query := local.sendoutstandingQuery(remote, "ping", bencoding.Dict{})
+	query := local.sendQuery(remote, "ping", bencoding.Dict{})
 
 	go func() {
 		defer close(pingResult)
@@ -147,7 +147,7 @@ func (local *localNode) FindNode(remote *RemoteNode, id bittorrent.BTID) (<-chan
 	findResult := make(chan []*RemoteNode)
 	findErr := make(chan error)
 
-	query := local.sendoutstandingQuery(remote, "find_node", bencoding.Dict{
+	query := local.sendQuery(remote, "find_node", bencoding.Dict{
 		"target": bencoding.String(id),
 	})
 
@@ -187,7 +187,7 @@ func (local *localNode) GetPeers(remote *RemoteNode, infoHash bittorrent.BTID) (
 	nodesResult := make(chan []*RemoteNode)
 	getPeersErr := make(chan error)
 
-	query := local.sendoutstandingQuery(remote, "get_peers", bencoding.Dict{
+	query := local.sendQuery(remote, "get_peers", bencoding.Dict{
 		"info_hash": bencoding.String(infoHash),
 	})
 

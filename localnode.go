@@ -20,7 +20,7 @@ type localNode struct {
 	Port               int
 	Connection         *net.UDPConn
 	Nodes              map[string]*RemoteNode
-	OutstandingQueries map[string]*outstandingQuery
+	OutstandingQueries map[string]*RpcQuery
 }
 
 type RemoteList []*RemoteNode
@@ -35,7 +35,7 @@ func newLocalNode() (local *localNode) {
 	local = new(localNode)
 	local.Id = id
 	local.Port = 1024 + weakrand.Intn(8192)
-	local.OutstandingQueries = make(map[string]*outstandingQuery)
+	local.OutstandingQueries = make(map[string]*RpcQuery)
 	local.Nodes = map[string]*RemoteNode{}
 
 	for _, node := range defaultNodes {
@@ -145,7 +145,7 @@ func localNodeFromBencodingDict(dict bencoding.Dict) (local *localNode) {
 
 	local.Id = bittorrent.BTID(dict["Id"].(bencoding.String))
 	local.Port = int(dict["Port"].(bencoding.Int))
-	local.OutstandingQueries = make(map[string]*outstandingQuery)
+	local.OutstandingQueries = make(map[string]*RpcQuery)
 	local.Nodes = map[string]*RemoteNode{}
 
 	for _, nodeDict := range dict["Nodes"].(bencoding.List) {

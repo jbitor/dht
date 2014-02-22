@@ -3,7 +3,9 @@
 // and a higher-level client interface for querying the DHT.
 package dht
 
-import "net"
+import (
+	"net"
+)
 
 var defaultNodes = []RemoteNode{
 	// Possible node: hope for another node running locally, on the default port
