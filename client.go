@@ -202,6 +202,7 @@ func (c *localNodeClient) GetPeers(target bittorrent.BTID) (s *GetPeersSearch) {
 }
 
 func (c *localNodeClient) AnnouncePeer(local *bittorrent.LocalPeer, infoHash bittorrent.BTID) (err error) {
+	// XXX(JB): Not implemented
 	panic("AnnouncePeer not implemented")
 }
 

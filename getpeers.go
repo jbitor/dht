@@ -8,19 +8,19 @@ import (
 
 type GetPeersOptions struct {
 	// The search isn't finished until
-	TargetPeers       int           // [we've found at least TargetPeers and
-	MinNodes          int           // we've contacted at least MinNodes] or
-	MaxNodes          int           // we've contacted at least MaxNodes or
-	Timeout           time.Duration // this much time has passed.
-	ConcurrentQueries int           // We may send up to this many queries at once.
+	TargetPeers      int           // [we've found at least TargetPeers and
+	MinNodes         int           // we've contacted at least MinNodes] or
+	MaxNodes         int           // we've contacted at least MaxNodes or
+	Timeout          time.Duration // this much time has passed.
+	MinQueryInterval time.Duration // We'll send queries at least this far apart.
 }
 
 var GetPeersDefaultOptions = GetPeersOptions{
-	TargetPeers:       8,
-	MinNodes:          4,
-	MaxNodes:          32,
-	Timeout:           10 * time.Minute,
-	ConcurrentQueries: 8,
+	TargetPeers:      8,
+	MinNodes:         4,
+	MaxNodes:         32,
+	Timeout:          10 * time.Minute,
+	MinQueryInterval: 5 * time.Second,
 }
 
 type GetPeersSearch struct {
@@ -58,59 +58,61 @@ func (s *GetPeersSearch) run() {
 	for !s.Finished() {
 		nodes := s.localNode.NodesByCloseness(s.Infohash, false)
 
-		if s.AdditionalQueriesDue() {
-			var remote *RemoteNode = nil
-			for _, candidate := range nodes {
-				// XXX(JB): .String() is not a clean way to do this
-				if _, present := s.QueriedNodes[candidate.Address.String()]; present {
-					continue // already queried this node
-				}
-
-				remote = candidate
-				s.QueriedNodes[remote.Address.String()] = remote
-				break
+		var remote *RemoteNode = nil
+		for _, candidate := range nodes {
+			// XXX(JB): .String() is not a clean way to do this
+			if _, present := s.QueriedNodes[candidate.Address.String()]; present {
+				continue // already queried this node for this search
 			}
 
-			if remote != nil {
-				logger.Printf("Request peers for %v from %v.\n", s.Infohash, remote)
-
-				go func() {
-					peersResult, nodesResult, errorResult := s.localNode.GetPeers(remote, s.Infohash)
-
-					select {
-					case peers := <-peersResult:
-						logger.Printf("Got peers from %v", remote)
-
-						newPeers := make([]*bittorrent.RemotePeer, 0)
-
-						for _, peer := range peers {
-							// XXX(JB): .String() is not a clean way to do this
-
-							if _, present := s.PeersFound[peer.Address.String()]; !present {
-								newPeers = append(newPeers, peer)
-								s.PeersFound[peer.Address.String()] = peer
-							}
-						}
-
-						if len(newPeers) > 0 {
-							logger.Printf("Got %v new peers.\n", len(newPeers))
-
-							for _, c := range s.peerReaders {
-								c <- newPeers
-							}
-						} else {
-							logger.Printf("Got no new peers.\n")
-						}
-					case _ = <-nodesResult:
-						// nothing to do -- nodes will already have been recorded
-					case err := <-errorResult:
-						logger.Printf("Error response to GetPeers: %v\n", err)
-					}
-				}()
+			if candidate.Flooded() {
+				continue
 			}
+
+			remote = candidate
+			s.QueriedNodes[remote.Address.String()] = remote
+			break
 		}
 
-		time.Sleep(2 * time.Second)
+		if remote != nil {
+			logger.Printf("Request peers for %v from %v.\n", s.Infohash, remote)
+
+			go func() {
+				peersResult, nodesResult, errorResult := s.localNode.GetPeers(remote, s.Infohash)
+
+				select {
+				case peers := <-peersResult:
+					logger.Printf("Got peers from %v", remote)
+
+					newPeers := make([]*bittorrent.RemotePeer, 0)
+
+					for _, peer := range peers {
+						// XXX(JB): .String() is not a clean way to do this
+
+						if _, present := s.PeersFound[peer.Address.String()]; !present {
+							newPeers = append(newPeers, peer)
+							s.PeersFound[peer.Address.String()] = peer
+						}
+					}
+
+					if len(newPeers) > 0 {
+						logger.Printf("Got %v new peers.\n", len(newPeers))
+
+						for _, c := range s.peerReaders {
+							c <- newPeers
+						}
+					} else {
+						logger.Printf("Got no new peers.\n")
+					}
+				case _ = <-nodesResult:
+					// nothing to do -- nodes will already have been recorded
+				case err := <-errorResult:
+					logger.Printf("Error response to GetPeers: %v\n", err)
+				}
+			}()
+		}
+
+		time.Sleep(s.Options.MinQueryInterval)
 	}
 }
 
@@ -140,12 +142,6 @@ func (s *GetPeersSearch) Finished() bool {
 	}
 
 	return s.finished
-}
-
-// Whether this search is currently due to send any more queries.
-func (s *GetPeersSearch) AdditionalQueriesDue() bool {
-	return !s.Finished() &&
-		len(s.OutstandingQueries) < s.Options.ConcurrentQueries
 }
 
 // Returns a channel which is notified each time new

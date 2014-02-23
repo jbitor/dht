@@ -42,6 +42,10 @@ func encodeNodeAddress(addr net.UDPAddr) (encoded bencoding.String) {
 }
 
 func (local *localNode) sendQuery(remote *RemoteNode, queryType string, arguments bencoding.Dict) (query *RpcQuery) {
+	if remote.Flooded() {
+		logger.Printf("WARNING: flooding node %v.\n", remote)
+	}
+
 	query = new(RpcQuery)
 	query.Result = make(chan *bencoding.Dict)
 	query.Err = make(chan error)

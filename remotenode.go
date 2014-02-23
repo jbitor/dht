@@ -111,6 +111,16 @@ func (remote *RemoteNode) Status() RemoteNodeStatus {
 	}
 }
 
+// The minimum time that must elapse before we will send an additional
+// query to the same node.
+const MinNodeQueryInterval = 60 * time.Second
+
+// Indicate whether we have sent a query to this node too recently
+// to send another one now.
+func (remote *RemoteNode) Flooded() bool {
+	return time.Since(remote.LastRequestTo) < MinNodeQueryInterval
+}
+
 type RemoteNodeStatus int
 
 const (

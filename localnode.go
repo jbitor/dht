@@ -23,8 +23,6 @@ type localNode struct {
 	OutstandingQueries map[string]*RpcQuery
 }
 
-type RemoteList []*RemoteNode
-
 func newLocalNode() (local *localNode) {
 	id, err := bittorrent.SecureRandomBTID()
 	if err != nil {
