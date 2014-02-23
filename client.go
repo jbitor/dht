@@ -302,7 +302,7 @@ func (local *localNode) pingRandomNode() {
 	}
 }
 
-// Make this a client method, and add a saving loop to it.
+// TODO(JB): Make this a client method, and add a saving loop to it.
 func (local *localNode) requestMoreNodes() {
 	var randNode *RemoteNode
 	randNodeOffset := weakrand.Intn(len(local.Nodes))
