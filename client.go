@@ -39,6 +39,8 @@ type Client interface {
 	AnnouncePeer(local *bittorrent.LocalPeer, infoHash bittorrent.BTID) (err error)
 
 	ConnectionInfo() ConnectionInfo
+
+	Id() bittorrent.BTID
 }
 
 /*
@@ -144,6 +146,14 @@ func OpenClient(path string, blocking bool) (c Client, err error) {
 	}()
 
 	return
+}
+
+func (c *localNodeClient) Id() (id bittorrent.BTID) {
+	if c.localNode != nil {
+		return c.localNode.Id
+	}
+	// TODO(JB): is this stupid?
+	return bittorrent.BTID(0)
 }
 
 func (c *localNodeClient) Close() (err error) {
