@@ -19,7 +19,7 @@ var defaultNodes = []RemoteNode{
 	// Bootstrap node: router.bittorrent.com
 	{
 		Address: net.UDPAddr{
-			IP:   net.IPv4(67, 215, 242, 139),
+			IP:   net.IPv4(67, 215, 246, 10),
 			Port: 6881,
 		},
 		BootstrapOnly: true,
@@ -28,7 +28,7 @@ var defaultNodes = []RemoteNode{
 	// Bootstrap node: dht.transmissionbt.com
 	{
 		Address: net.UDPAddr{
-			IP:   net.IPv4(91, 121, 60, 42),
+			IP:   net.IPv4(91, 121, 59, 153),
 			Port: 6881,
 		},
 		BootstrapOnly: true,
