@@ -2,13 +2,14 @@ package dht
 
 import (
 	"errors"
-	"github.com/jbitor/bencoding"
-	"github.com/jbitor/bittorrent"
 	"io/ioutil"
 	weakrand "math/rand"
 	"os"
 	"syscall"
 	"time"
+
+	"github.com/jbitor/bencoding"
+	"github.com/jbitor/bittorrent"
 )
 
 // Any DHT queries sent to another node will time out after this long.

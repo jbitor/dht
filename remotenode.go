@@ -2,10 +2,11 @@ package dht
 
 import (
 	"fmt"
-	"github.com/jbitor/bencoding"
-	"github.com/jbitor/bittorrent"
 	"net"
 	"time"
+
+	"github.com/jbitor/bencoding"
+	"github.com/jbitor/bittorrent"
 )
 
 type RemoteNode struct {

@@ -2,8 +2,9 @@ package dht
 
 import (
 	"errors"
-	"github.com/jbitor/bittorrent"
 	"time"
+
+	"github.com/jbitor/bittorrent"
 )
 
 type GetPeersOptions struct {

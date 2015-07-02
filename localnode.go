@@ -2,12 +2,13 @@ package dht
 
 import (
 	"fmt"
-	"github.com/jbitor/bencoding"
-	"github.com/jbitor/bittorrent"
 	"io"
 	weakrand "math/rand"
 	"net"
 	"sort"
+
+	"github.com/jbitor/bencoding"
+	"github.com/jbitor/bittorrent"
 )
 
 /*
@@ -36,8 +37,14 @@ func newLocalNode() (local *localNode) {
 	local.OutstandingQueries = make(map[string]*RpcQuery)
 	local.Nodes = map[string]*RemoteNode{}
 
-	for _, node := range defaultNodes {
-		local.AddOrGetRemoteNode(&node)
+	for _, addrString := range bootstrapAddresses {
+		addr, err := net.ResolveUDPAddr("udp", addrString)
+		if err == nil {
+			local.AddOrGetRemoteNode(&RemoteNode{
+				Address:       *addr,
+				BootstrapOnly: true,
+			})
+		}
 	}
 
 	return local
@@ -56,7 +63,6 @@ func (local *localNode) AddOrGetRemoteNode(remote *RemoteNode) *RemoteNode {
 	}
 
 	return remote
-
 }
 
 type nodeOrderingByCloseness struct {

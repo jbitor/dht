@@ -4,10 +4,11 @@ import (
 	"crypto/rand"
 	"errors"
 	"fmt"
-	"github.com/jbitor/bencoding"
-	"github.com/jbitor/bittorrent"
 	"net"
 	"time"
+
+	"github.com/jbitor/bencoding"
+	"github.com/jbitor/bittorrent"
 )
 
 type RpcQuery struct {
