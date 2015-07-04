@@ -102,10 +102,10 @@ func OpenClient(path string, blocking bool) (c Client, err error) {
 
 	nodeData, err = ioutil.ReadAll(lc.openDataFile)
 	if err != nil {
-		logger.Printf("Unable to read existing DHT node file (%v). Creating a new one.\n", err)
+		logger.Info("Unable to read existing DHT node file (%v). Creating a new one.\n", err)
 		lc.localNode = newLocalNode()
 	} else if len(nodeData) == 0 {
-		logger.Printf("Existing DHT node file was empty. Creating a new one.\n")
+		logger.Info("Existing DHT node file was empty. Creating a new one.\n")
 		lc.localNode = newLocalNode()
 	} else {
 		nodeDict, err = bencoding.Decode(nodeData)
@@ -117,13 +117,13 @@ func OpenClient(path string, blocking bool) (c Client, err error) {
 		nodeDictAsDict, ok = nodeDict.(bencoding.Dict)
 		if !ok {
 			err = errors.New("Node data wasn't a dict.")
-			logger.Printf("%v\n", err)
+			logger.Info("%v\n", err)
 			openDataFile.Close()
 			return
 		}
 
 		lc.localNode = localNodeFromBencodingDict(nodeDictAsDict)
-		logger.Printf("Loaded local node info from %v.\n", path)
+		logger.Info("Loaded local node info from %v.\n", path)
 	}
 
 	terminateLocalNode := make(chan bool)
@@ -200,7 +200,7 @@ func (c *localNodeClient) Save() (err error) {
 		return
 	}
 
-	logger.Printf("Saved DHT client state.\n")
+	logger.Info("Saved DHT client state.\n")
 
 	return
 }
@@ -253,7 +253,7 @@ func (c *localNodeClient) nodeListMaintenanceLoop(terminate <-chan bool) {
 
 		info := c.ConnectionInfo()
 
-		logger.Printf("localNode running with %v good nodes (%v unknown and %v bad).\n",
+		logger.Info("localNode running with %v good nodes (%v unknown and %v bad).\n",
 			info.GoodNodes, info.UnknownNodes, info.BadNodes)
 
 		c.pingRandomNode()
@@ -282,7 +282,7 @@ func (local *localNode) pingRandomNode() {
 		i++
 	}
 
-	logger.Printf("Pinging a random node: %v.\n", randNode)
+	logger.Info("Pinging a random node: %v.\n", randNode)
 
 	resultChan, errChan := local.Ping(randNode)
 
@@ -295,13 +295,13 @@ func (local *localNode) pingRandomNode() {
 
 	select {
 	case _ = <-resultChan:
-		logger.Printf("Successfully pinged %v.\n", randNode)
+		logger.Info("Successfully pinged %v.\n", randNode)
 
 	case err := <-errChan:
-		logger.Printf("Failed to ping %v: %v.\n", randNode, err)
+		logger.Info("Failed to ping %v: %v.\n", randNode, err)
 
 	case err := <-timeoutChan:
-		logger.Printf("Failed to ping %v: %v.\n", randNode, err)
+		logger.Info("Failed to ping %v: %v.\n", randNode, err)
 	}
 }
 
@@ -321,7 +321,7 @@ func (local *localNode) requestMoreNodes() {
 
 	target := bittorrent.WeakRandomBTID()
 
-	logger.Printf("Requesting new nodes around %v from %v.\n", target, randNode)
+	logger.Info("Requesting new nodes around %v from %v.\n", target, randNode)
 
 	resultChan, errChan := local.FindNode(randNode, target)
 
@@ -334,12 +334,12 @@ func (local *localNode) requestMoreNodes() {
 
 	select {
 	case _ = <-resultChan:
-		logger.Printf("Successfully find nodes from %v.\n", randNode)
+		logger.Info("Successfully find nodes from %v.\n", randNode)
 
 	case err := <-errChan:
-		logger.Printf("Failed to find nodes from %v: %v.\n", randNode, err)
+		logger.Info("Failed to find nodes from %v: %v.\n", randNode, err)
 
 	case err := <-timeoutChan:
-		logger.Printf("Failed to find nodes from %v: %v.\n", randNode, err)
+		logger.Info("Failed to find nodes from %v: %v.\n", randNode, err)
 	}
 }

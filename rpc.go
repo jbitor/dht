@@ -45,11 +45,11 @@ func encodeNodeAddress(addr net.UDPAddr) (encoded bencoding.String) {
 func (local *localNode) sendQuery(remote *RemoteNode, queryType string, arguments bencoding.Dict) (query *RpcQuery) {
 	// XXX(JB): These should probably have a distinct warning logger.
 	if remote.Flooded() {
-		logger.Printf("WARNING: flooding node %v.\n", remote)
+		logger.Info("WARNING: flooding node %v.\n", remote)
 	}
 
 	if remote.Status() == STATUS_BAD {
-		logger.Printf("WARNING: querying bad node %v.\n", remote)
+		logger.Info("WARNING: querying bad node %v.\n", remote)
 	}
 
 	query = new(RpcQuery)
@@ -268,28 +268,28 @@ func (local *localNode) rpcListenLoop(terminate <-chan bool) {
 	response := new([1024]byte)
 
 	for {
-		logger.Printf("Waiting for next incoming UDP message.\n")
+		logger.Info("Waiting for next incoming UDP message.\n")
 
 		n, remoteAddr, err := local.Connection.ReadFromUDP(response[:])
 
 		_ = remoteAddr
 
 		if err != nil {
-			logger.Printf("Ignoring UDP read err: %v\n", err)
+			logger.Info("Ignoring UDP read err: %v\n", err)
 			continue
 		}
 
 		result, err := bencoding.Decode(response[:n])
 
 		if err != nil {
-			logger.Printf("Ignoring un-bedecodable message: %v\n", err)
+			logger.Info("Ignoring un-bedecodable message: %v\n", err)
 			continue
 		}
 
 		resultD, ok := result.(bencoding.Dict)
 
 		if !ok {
-			logger.Printf("Ignoring bedecoded non-dict message: %v\n", err)
+			logger.Info("Ignoring bedecoded non-dict message: %v\n", err)
 			continue
 		}
 
@@ -297,7 +297,7 @@ func (local *localNode) rpcListenLoop(terminate <-chan bool) {
 
 		query, ok := local.OutstandingQueries[transactionId]
 		if !ok {
-			logger.Printf("Ignoring query response with unexpected token.\n")
+			logger.Info("Ignoring query response with unexpected token.\n")
 			continue
 		}
 
@@ -305,7 +305,7 @@ func (local *localNode) rpcListenLoop(terminate <-chan bool) {
 
 		resultBody, ok := resultD["r"].(bencoding.Dict)
 		if !ok {
-			logger.Printf("Ignoring response with non-dict contents.\n")
+			logger.Info("Ignoring response with non-dict contents.\n")
 			continue
 		}
 

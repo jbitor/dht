@@ -1,13 +1,5 @@
 package dht
 
-import (
-	"log"
-	"os"
-)
+import "github.com/op/go-logging"
 
-var logger *log.Logger
-
-// Initializes the logger for this package, using os.Stderr.
-func init() {
-	logger = log.New(os.Stderr, "[     DHT     ] ", log.Lshortfile)
-}
+var logger = logging.MustGetLogger("dht")

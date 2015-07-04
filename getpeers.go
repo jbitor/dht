@@ -77,14 +77,14 @@ func (s *GetPeersSearch) run() {
 		}
 
 		if remote != nil {
-			logger.Printf("Request peers for %v from %v.\n", s.Infohash, remote)
+			logger.Info("Request peers for %v from %v.\n", s.Infohash, remote)
 
 			go func() {
 				peersResult, nodesResult, errorResult := s.localNode.GetPeers(remote, s.Infohash)
 
 				select {
 				case peers := <-peersResult:
-					logger.Printf("Got peers from %v", remote)
+					logger.Info("Got peers from %v", remote)
 
 					newPeers := make([]net.TCPAddr, 0)
 
@@ -98,18 +98,18 @@ func (s *GetPeersSearch) run() {
 					}
 
 					if len(newPeers) > 0 {
-						logger.Printf("Got %v new peers.\n", len(newPeers))
+						logger.Info("Got %v new peers.\n", len(newPeers))
 
 						for _, c := range s.peerReaders {
 							c <- newPeers
 						}
 					} else {
-						logger.Printf("Got no new peers.\n")
+						logger.Info("Got no new peers.\n")
 					}
 				case _ = <-nodesResult:
 					// nothing to do -- nodes will already have been recorded
 				case err := <-errorResult:
-					logger.Printf("Error response to GetPeers: %v\n", err)
+					logger.Info("Error response to GetPeers: %v\n", err)
 				}
 			}()
 		}
