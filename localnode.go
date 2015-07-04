@@ -3,13 +3,14 @@ package dht
 import (
 	"fmt"
 	"io"
-	weakrand "math/rand"
 	"net"
 	"sort"
 
 	"github.com/jbitor/bencoding"
 	"github.com/jbitor/bittorrent"
 )
+
+const PORT = 6882
 
 /*
 localNodes is a DHT node implementation. Currently, it only supports the
@@ -33,7 +34,7 @@ func newLocalNode() (local *localNode) {
 
 	local = new(localNode)
 	local.Id = id
-	local.Port = 1024 + weakrand.Intn(8192)
+	local.Port = PORT
 	local.OutstandingQueries = make(map[string]*RpcQuery)
 	local.Nodes = map[string]*RemoteNode{}
 
