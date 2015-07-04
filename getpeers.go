@@ -2,6 +2,7 @@ package dht
 
 import (
 	"errors"
+	"net"
 	"time"
 
 	"github.com/jbitor/bittorrent"
@@ -28,13 +29,13 @@ type GetPeersSearch struct {
 	Infohash           bittorrent.BTID
 	Options            GetPeersOptions
 	QueriedNodes       map[string]*RemoteNode
-	PeersFound         map[string]*bittorrent.RemotePeer
+	PeersFound         map[string]net.TCPAddr
 	OutstandingQueries map[string]*RpcQuery
 	StartTime          time.Time
 
 	finished    bool
 	localNode   *localNode
-	peerReaders []chan<- []*bittorrent.RemotePeer
+	peerReaders []chan<- []net.TCPAddr
 }
 
 func newGetPeersSearch(target bittorrent.BTID, localNode_ *localNode) (s *GetPeersSearch) {
@@ -44,9 +45,9 @@ func newGetPeersSearch(target bittorrent.BTID, localNode_ *localNode) (s *GetPee
 		StartTime:          time.Now(),
 		localNode:          localNode_,
 		QueriedNodes:       make(map[string]*RemoteNode),
-		PeersFound:         make(map[string]*bittorrent.RemotePeer),
+		PeersFound:         make(map[string]net.TCPAddr),
 		OutstandingQueries: make(map[string]*RpcQuery),
-		peerReaders:        make([]chan<- []*bittorrent.RemotePeer, 0),
+		peerReaders:        make([]chan<- []net.TCPAddr, 0),
 	}
 
 	go s.run()
@@ -85,14 +86,14 @@ func (s *GetPeersSearch) run() {
 				case peers := <-peersResult:
 					logger.Printf("Got peers from %v", remote)
 
-					newPeers := make([]*bittorrent.RemotePeer, 0)
+					newPeers := make([]net.TCPAddr, 0)
 
 					for _, peer := range peers {
 						// XXX(JB): .String() is not a clean way to do this
 
-						if _, present := s.PeersFound[peer.Address.String()]; !present {
+						if _, present := s.PeersFound[peer.String()]; !present {
 							newPeers = append(newPeers, peer)
-							s.PeersFound[peer.Address.String()] = peer
+							s.PeersFound[peer.String()] = peer
 						}
 					}
 
@@ -147,8 +148,8 @@ func (s *GetPeersSearch) Finished() bool {
 
 // Returns a channel which is notified each time new
 // peers are recieved, and is closed when the request is finished.
-func (s *GetPeersSearch) ReadNewPeers() (peersSource <-chan []*bittorrent.RemotePeer) {
-	peersSourceDuplex := make(chan []*bittorrent.RemotePeer)
+func (s *GetPeersSearch) ReadNewPeers() (peersSource <-chan []net.TCPAddr) {
+	peersSourceDuplex := make(chan []net.TCPAddr)
 
 	if s.Finished() {
 		close(peersSourceDuplex)
@@ -161,12 +162,12 @@ func (s *GetPeersSearch) ReadNewPeers() (peersSource <-chan []*bittorrent.Remote
 
 // Blocks until we have any peers, then returns all known peers.
 // Returns an error if the request fails to find any peers.
-func (s *GetPeersSearch) AnyPeers() (peers []*bittorrent.RemotePeer, err error) {
+func (s *GetPeersSearch) AnyPeers() (peers []net.TCPAddr, err error) {
 	c := s.ReadNewPeers()
 	_, _ = <-c
 
 	if len(s.PeersFound) > 0 {
-		peers = make([]*bittorrent.RemotePeer, 0)
+		peers = make([]net.TCPAddr, 0)
 		for _, peer := range s.PeersFound {
 			peers = append(peers, peer)
 		}
@@ -178,7 +179,7 @@ func (s *GetPeersSearch) AnyPeers() (peers []*bittorrent.RemotePeer, err error) 
 
 // Blocks until the request is finished, then returns all known peers.
 // Returns an error if the request fails to find any peers.
-func (s *GetPeersSearch) AllPeers() (peers []*bittorrent.RemotePeer, err error) {
+func (s *GetPeersSearch) AllPeers() (peers []net.TCPAddr, err error) {
 	c := s.ReadNewPeers()
 	ok := true
 	for ok {
@@ -186,7 +187,7 @@ func (s *GetPeersSearch) AllPeers() (peers []*bittorrent.RemotePeer, err error) 
 	}
 
 	if len(s.PeersFound) > 0 {
-		peers = make([]*bittorrent.RemotePeer, 0)
+		peers = make([]net.TCPAddr, 0)
 		for _, peer := range s.PeersFound {
 			peers = append(peers, peer)
 		}

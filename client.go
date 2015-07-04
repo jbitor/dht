@@ -36,9 +36,6 @@ type Client interface {
 	// GetPeers attempts to find remote torrent peers downloading a given bittorrent.
 	GetPeers(infoHash bittorrent.BTID) (search *GetPeersSearch)
 
-	// AnnouncePeer announces to the DHT that a local torrent peer is downloading a given bittorrent.
-	AnnouncePeer(local *bittorrent.LocalPeer, infoHash bittorrent.BTID) (err error)
-
 	ConnectionInfo() ConnectionInfo
 
 	Id() bittorrent.BTID
@@ -210,11 +207,6 @@ func (c *localNodeClient) Save() (err error) {
 
 func (c *localNodeClient) GetPeers(target bittorrent.BTID) (s *GetPeersSearch) {
 	return newGetPeersSearch(target, c.localNode)
-}
-
-func (c *localNodeClient) AnnouncePeer(local *bittorrent.LocalPeer, infoHash bittorrent.BTID) (err error) {
-	// XXX(JB): Not implemented
-	panic("AnnouncePeer not implemented")
 }
 
 func (c *localNodeClient) ConnectionInfo() ConnectionInfo {

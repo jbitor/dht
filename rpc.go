@@ -192,8 +192,8 @@ func (local *localNode) FindNode(remote *RemoteNode, id bittorrent.BTID) (<-chan
 	return findResult, findErr
 }
 
-func (local *localNode) GetPeers(remote *RemoteNode, infoHash bittorrent.BTID) (<-chan []*bittorrent.RemotePeer, <-chan []*RemoteNode, <-chan error) {
-	peersResult := make(chan []*bittorrent.RemotePeer)
+func (local *localNode) GetPeers(remote *RemoteNode, infoHash bittorrent.BTID) (<-chan []net.TCPAddr, <-chan []*RemoteNode, <-chan error) {
+	peersResult := make(chan []net.TCPAddr)
 	nodesResult := make(chan []*RemoteNode)
 	getPeersErr := make(chan error)
 
@@ -212,7 +212,7 @@ func (local *localNode) GetPeers(remote *RemoteNode, infoHash bittorrent.BTID) (
 			nodesData, nodesOk := (*value)["nodes"].(bencoding.String)
 
 			if peersOk {
-				result := make([]*bittorrent.RemotePeer, len(peerData))
+				result := make([]net.TCPAddr, len(peerData))
 
 				for i, data := range peerData {
 					dataStr, ok := data.(bencoding.String)
@@ -229,7 +229,7 @@ func (local *localNode) GetPeers(remote *RemoteNode, infoHash bittorrent.BTID) (
 						return
 					}
 
-					result[i] = &bittorrent.RemotePeer{Address: addr}
+					result[i] = addr
 				}
 
 				remote.ConsecutiveFailedQueries = 0
