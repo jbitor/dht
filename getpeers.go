@@ -77,7 +77,7 @@ func (s *GetPeersSearch) run() {
 		}
 
 		if remote != nil {
-			logger.Info("Request peers for %v from %v.\n", s.Infohash, remote)
+			logger.Info("Request peers for %v from %v.", s.Infohash, remote)
 
 			go func() {
 				peersResult, nodesResult, errorResult := s.localNode.GetPeers(remote, s.Infohash)
@@ -98,18 +98,18 @@ func (s *GetPeersSearch) run() {
 					}
 
 					if len(newPeers) > 0 {
-						logger.Info("Got %v new peers.\n", len(newPeers))
+						logger.Info("Got %v new peers.", len(newPeers))
 
 						for _, c := range s.peerReaders {
 							c <- newPeers
 						}
 					} else {
-						logger.Info("Got no new peers.\n")
+						logger.Info("Got no new peers.")
 					}
 				case _ = <-nodesResult:
 					// nothing to do -- nodes will already have been recorded
 				case err := <-errorResult:
-					logger.Info("Error response to GetPeers: %v\n", err)
+					logger.Info("Error response to GetPeers: %v", err)
 				}
 			}()
 		}
